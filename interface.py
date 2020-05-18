@@ -132,9 +132,9 @@ class BelieveOthersPanel(wx.Panel):
         y = [a, b, c, d]
 
         fig = go.Figure(data=[go.Bar(x=x, y=y, text=y, textposition='outside', marker_color='coral')])
-        fig.write_image("believechart.png")
+        fig.write_image("images/believechart.png")
         chart = wx.StaticBitmap(self, pos=(10, 10))
-        chart.SetBitmap(wx.Bitmap('believechart.png'))
+        chart.SetBitmap(wx.Bitmap('images/believechart.png'))
 
 
 # ------------- MAIN FRAME & PANEL -------------------------------------------------
@@ -199,29 +199,48 @@ class Panel(wx.Panel):
 
         # BUTTON CHANGES COLOR OF PLAYERS - right panel
         resultButton = wx.Button(self, label="Show result", size=(300, 50))
-        resultButton.SetBackgroundColour('sea green')
+        resultButton.SetBackgroundColour('navy')
+        resultButton.SetForegroundColour('white')
         resultButton.SetFont(wx.Font(15, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         resultButton.Bind(wx.EVT_BUTTON, self.show_result)
         # SURVEY OTHER PLAYERS BUTTON
         surveyButton = wx.Button(self, label="Khảo sát người chơi", size=(300, 50))
-        surveyButton.SetBackgroundColour("navy")
+        survey_bitmap = wx.Bitmap("images/survey.png")
+        surveyButton.SetBitmap(survey_bitmap, wx.LEFT)
+        surveyButton.SetBitmapMargins(10, 10)
+        surveyButton.SetBackgroundColour("red")
         surveyButton.SetForegroundColour('white')
         surveyButton.SetFont(wx.Font(15, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         surveyButton.Bind(wx.EVT_BUTTON, self.survey_others)
         # ASK OTHER PLAYERS BUTTON
         askButton = wx.Button(self, label="Hỏi người chơi", size=(300, 50))
-        askButton.SetBackgroundColour("navy")
+        ask_bitmap = wx.Bitmap("images/ask.png")
+        askButton.SetBitmap(ask_bitmap, wx.LEFT)
+        askButton.SetBitmapMargins(10, 10)
+        askButton.SetBackgroundColour("red")
         askButton.SetForegroundColour('white')
         askButton.SetFont(wx.Font(15, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         askButton.Bind(wx.EVT_BUTTON, self.ask_others)
         # BELIEVE OTHER PLAYERS BUTTON
         believeButton = wx.Button(self, label="Tin người chơi", size=(300, 50))
-        believeButton.SetBackgroundColour("navy")
+        believe_bitmap = wx.Bitmap("images/believe.png")
+        believeButton.SetBitmap(believe_bitmap, wx.LEFT)
+        believeButton.SetBitmapMargins(10, 10)
+        believeButton.SetBackgroundColour("red")
         believeButton.SetForegroundColour('white')
         believeButton.SetFont(wx.Font(15, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         believeButton.Bind(wx.EVT_BUTTON, self.believe_others)
 
-        # DISPLAY MAIN PLAYER'S MONEY
+        # DISPLAY MAIN PLAYER & HIS CURRENT MONEY - left panel
+        # Main player choosing button
+        find_bitmap = wx.Bitmap("images/find.png")
+        main_player_button = wx.Button(self, label="Tìm người\nchơi chính", size=(300, 200))
+        main_player_button.SetBitmap(find_bitmap, dir=wx.TOP)
+        main_player_button.SetBitmapMargins(10, 10)
+        main_player_button.SetFont(wx.Font(25, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        main_player_button.SetBackgroundColour("blue violet")
+        main_player_button.SetForegroundColour("black")
+        # Display his money
         self.money = 0
         self.money_text = wx.StaticText(self, label="S$"+str(self.money)+" ", size=(300, 150), style=wx.ALIGN_RIGHT)
         self.money_text.SetFont(wx.Font(100, wx.DEFAULT, wx.NORMAL, wx.BOLD))
@@ -238,6 +257,7 @@ class Panel(wx.Panel):
         self.rightpanel.Add(askButton, 0, wx.CENTER, 0)
         self.rightpanel.Add(believeButton, 0, wx.CENTER, 0)
         # left panel
+        self.leftpanel.Add(main_player_button, 0, wx.CENTER, 0)
         self.leftpanel.Add(self.money_text, 0, wx.CENTER, 0)
         # home panel
         self.homepanel.Add(self.leftpanel, 50, wx.ALL | wx.CENTER, 50)
