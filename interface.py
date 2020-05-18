@@ -182,7 +182,7 @@ class Panel(wx.Panel):
             players = player_file.readlines()
             total = len(players)-1
             self.remain_players = total
-            self.heading_txt.SetLabel("1 vs. "+str(self.remain_players))
+            self.heading_txt.SetLabel("1 vs. "+str(self.remain_players-1))
             numRow = math.ceil(math.sqrt(total))
             for index, player in enumerate(players[1:]):
                 player = player.strip().split(",")
@@ -234,12 +234,13 @@ class Panel(wx.Panel):
         # DISPLAY MAIN PLAYER & HIS CURRENT MONEY - left panel
         # Main player choosing button
         find_bitmap = wx.Bitmap("images/find.png")
-        main_player_button = wx.Button(self, label="Tìm người\nchơi chính", size=(300, 200))
-        main_player_button.SetBitmap(find_bitmap, dir=wx.TOP)
-        main_player_button.SetBitmapMargins(10, 10)
-        main_player_button.SetFont(wx.Font(25, wx.DEFAULT, wx.NORMAL, wx.BOLD))
-        main_player_button.SetBackgroundColour("blue violet")
-        main_player_button.SetForegroundColour("black")
+        self.main_player_button = wx.Button(self, label="Tìm người\nchơi chính", size=(300, 200))
+        self.main_player_button.SetBitmap(find_bitmap, dir=wx.TOP)
+        self.main_player_button.SetBitmapMargins(10, 10)
+        self.main_player_button.SetFont(wx.Font(25, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        self.main_player_button.SetBackgroundColour("blue violet")
+        self.main_player_button.SetForegroundColour("black")
+        self.main_player_button.Bind(wx.EVT_BUTTON, self.find_main_player)
         # Display his money
         self.money = 0
         self.money_text = wx.StaticText(self, label="S$"+str(self.money)+" ", size=(300, 150), style=wx.ALIGN_RIGHT)
@@ -257,7 +258,7 @@ class Panel(wx.Panel):
         self.rightpanel.Add(askButton, 0, wx.CENTER, 0)
         self.rightpanel.Add(believeButton, 0, wx.CENTER, 0)
         # left panel
-        self.leftpanel.Add(main_player_button, 0, wx.CENTER, 0)
+        self.leftpanel.Add(self.main_player_button, 0, wx.CENTER, 0)
         self.leftpanel.Add(self.money_text, 0, wx.CENTER, 0)
         # home panel
         self.homepanel.Add(self.leftpanel, 50, wx.ALL | wx.CENTER, 50)
@@ -377,6 +378,27 @@ class Panel(wx.Panel):
 
         believe_frame = BelieveOthersFrame(parent=None, title="Tin người chơi")
         believe_frame.Show()
+
+    def find_main_player(self, event):
+        data = requests.get(url=url_data).json()
+        # correct_answer = requests.get(url=url_ans).json()[self.no_of_ques]["answer"]
+        correct_answer = "A"     # correct ans for filtering main player question
+        print(self.no_of_ques + 1, " - CORRECT ANSWER: ", correct_answer)
+        for answer in data[self.bound:]:
+            player = self.dict_players["player_" + answer['SBD']]
+            his_ans = answer["Answer"]
+            if not player.out and his_ans == correct_answer:
+                main_player = player
+                self.main_player_button.SetLabel(main_player.name)
+                self.main_player_button.SetBitmap(wx.Bitmap("images/main_player.png"))
+                main_player.out = True
+                print("player_" + answer['SBD'], his_ans, True)
+                break
+        self.change_color(player=main_player, sbd_color="blue violet", name_color="MEDIUM VIOLET RED")
+        self.bound = len(data)
+        self.no_of_ques += 1
+        print("bound: ", self.bound)
+        self.Refresh()
 
 
 class App(wx.App):
