@@ -314,6 +314,10 @@ class Panel(wx.Panel):
                 except:
                     pass
                 self.change_color(player, sbd_color="dim grey", name_color="dim grey")
+        # remove players who did not answer the question
+        for player in self.dict_players:
+            if player not in self.dict_remain_players:
+                self.change_color(self.dict_players[player], sbd_color="dim grey", name_color="dim grey")
         self.bound = len(data)
         self.no_of_ques += 1
         print("bound: ", self.bound)
@@ -392,6 +396,7 @@ class Panel(wx.Panel):
                 self.main_player_button.SetLabel(main_player.name)
                 self.main_player_button.SetBitmap(wx.Bitmap("images/main_player.png"))
                 main_player.out = True
+                self.dict_players.pop("player_"+main_player.sbd)
                 print("player_" + answer['SBD'], his_ans, True)
                 break
         self.change_color(player=main_player, sbd_color="blue violet", name_color="MEDIUM VIOLET RED")
