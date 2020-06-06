@@ -391,13 +391,15 @@ class Panel(wx.Panel):
         self.dict_B = {}
         self.dict_C = {}
         self.dict_D = {}
+        answered = []       # list of players who answered
         data = requests.get(url=url_data).json()
         correct_answer = requests.get(url=url_ans).json()[self.no_of_ques]["answer"]
         print(self.no_of_ques + 1, " - CORRECT ANSWER: ", correct_answer)
         for answer in data[self.bound:]:
             player = self.dict_players["player_" + answer['SBD']]
             his_ans = answer["Answer"]
-            if not player.out:
+            if not player.out and "player_" + answer['SBD'] not in answered:
+                answered.append("player_" + answer['SBD'])
                 if his_ans == "A":
                     self.dict_A["player_" + answer['SBD']] = player
                     print("player_" + answer['SBD'], his_ans)
