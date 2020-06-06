@@ -57,7 +57,7 @@ class SurveyOthersPanel(wx.Panel):
         dict_players = app.frame.panel.dict_survey_players
         no_of_ans = 0
         for player in dict_players.keys():
-            if dict_players[player][1] == his_ans:
+            if not dict_players[player][0].out and dict_players[player][1] == his_ans:
                 no_of_ans += 1
         self.survey_txt.SetLabel("   Có "+str(no_of_ans)+" người chơi khác ra\nđáp án "+his_ans)
         self.SetSizer(self.programpanel)
@@ -91,21 +91,30 @@ class AskOthersPanel(wx.Panel):
         self.num2.SetFont(wx.Font(65, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         twoplayers.Add(self.num1, 0, wx.CENTER, 0)
         twoplayers.Add(self.num2, 0, wx.LEFT, 20)
-        self.mainpanel.Add(choose_button, 0, wx.TOP | wx.CENTER, 80)
+        self.reject_help = wx.StaticText(self, label="Các người chơi còn lại đều trả lời đúng hoặc sai!")
+        self.reject_help.SetFont(wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        self.reject_help.SetForegroundColour("GOLDENROD")
+        self.mainpanel.Add(choose_button, 0, wx.TOP | wx.CENTER, 50)
         self.mainpanel.Add(twoplayers, 0, wx.TOP | wx.CENTER, 50)
+        self.mainpanel.Add(self.reject_help, 0, wx.TOP | wx.CENTER, 50)
+
         self.programpanel.Add(self.mainpanel, 0, wx.CENTER, 0)
         self.SetSizer(self.programpanel)
 
     def choose(self, event):
-        true_player = random.choice(list(app.frame.panel.dict_ask_true.values()))
-        false_player = random.choice(list(app.frame.panel.dict_ask_false.values()))
-        if random.choice([True, False]):
-            self.num1.SetLabel(true_player.sbd)
-            self.num2.SetLabel(false_player.sbd)
+        if len(app.frame.panel.dict_ask_true) == 0 or len(app.frame.panel.dict_ask_false) == 0:
+            self.reject_help.SetForegroundColour("red")
+            self.Refresh()
         else:
-            self.num2.SetLabel(true_player.sbd)
-            self.num1.SetLabel(false_player.sbd)
-        self.SetSizer(self.programpanel)
+            true_player = random.choice(list(app.frame.panel.dict_ask_true.values()))
+            false_player = random.choice(list(app.frame.panel.dict_ask_false.values()))
+            if random.choice([True, False]):
+                self.num1.SetLabel(true_player.sbd)
+                self.num2.SetLabel(false_player.sbd)
+            else:
+                self.num2.SetLabel(true_player.sbd)
+                self.num1.SetLabel(false_player.sbd)
+            self.SetSizer(self.programpanel)
 
 
 # ------------ BELIEVE OTHERS FRAME & PANEL -----------------------------------------
@@ -132,6 +141,7 @@ class BelieveOthersPanel(wx.Panel):
         y = [a, b, c, d]
 
         fig = go.Figure(data=[go.Bar(x=x, y=y, text=y, textposition='outside', marker_color='coral')])
+        fig.update_layout(yaxis=dict(dtick=1))
         fig.write_image("images/believechart.png")
         chart = wx.StaticBitmap(self, pos=(10, 10))
         chart.SetBitmap(wx.Bitmap('images/believechart.png'))
@@ -180,10 +190,10 @@ class Panel(wx.Panel):
         # create players in table
         with open("participants.csv", "r") as player_file:
             players = player_file.readlines()
-            total = len(players)-1
-            self.remain_players = total
+            self.total = len(players)-1
+            self.remain_players = self.total
             self.heading_txt.SetLabel("1 vs. "+str(self.remain_players-1))
-            numRow = math.ceil(math.sqrt(total))
+            numRow = math.ceil(math.sqrt(self.total))
             for index, player in enumerate(players[1:]):
                 player = player.strip().split(",")
                 sbd, name = player[0], player[1]
@@ -194,7 +204,7 @@ class Panel(wx.Panel):
                     self.row.Add(player.box, 0, wx.BOTTOM, wx.CENTER)
                 else:
                     self.row.Add(player.box)
-                if index % numRow == numRow-1 or index == total-1:
+                if index % numRow == numRow-1 or index == self.total-1:
                     self.table.Add(self.row)
 
         # BUTTON CHANGES COLOR OF PLAYERS - right panel
@@ -247,6 +257,14 @@ class Panel(wx.Panel):
         self.money_text.SetFont(wx.Font(100, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         self.money_text.SetForegroundColour('yellow')
         self.money_text.SetBackgroundColour('black')
+        # create list to show money
+        self.list_money = []
+        with open("prize.csv", "r") as file:
+            rows = file.readlines()
+            for row in rows[1:]:
+                row = row.strip().split(",")
+                min_remain, max_remain, money = row[0], row[1], row[2]
+                self.list_money.append([int(min_remain), int(max_remain), money])
 
         # ADD SIZERs
         # main panel
@@ -314,15 +332,17 @@ class Panel(wx.Panel):
                 except:
                     pass
                 self.change_color(player, sbd_color="dim grey", name_color="dim grey")
-        # remove players who did not answer the question
+        # remove players who did not answer the question and change status out=True
         for player in self.dict_players:
             if player not in self.dict_remain_players:
                 self.change_color(self.dict_players[player], sbd_color="dim grey", name_color="dim grey")
+                self.dict_players[player].out = True
         self.bound = len(data)
         self.no_of_ques += 1
         print("bound: ", self.bound)
         self.remain_players = len(self.dict_remain_players.keys())
         self.heading_txt.SetLabel("1 vs. " + str(self.remain_players))
+        self.money_text.SetLabel("S$"+str(self.show_money()))
         self.Refresh()
 
     def survey_others(self, event):
@@ -332,6 +352,7 @@ class Panel(wx.Panel):
             player = self.dict_players["player_" + answer['SBD']]
             his_ans = answer["Answer"]
             self.dict_survey_players["player_" + answer['SBD']] = [player, his_ans]
+            print("player_" + answer['SBD'], his_ans)
         survey_frame = SurveyOthersFrame(parent=None, title="Khảo sát người chơi")
         survey_frame.Show()
 
@@ -345,12 +366,23 @@ class Panel(wx.Panel):
             player = self.dict_players["player_" + answer['SBD']]
             his_ans = answer["Answer"]
             if not player.out and his_ans == correct_answer:
-                self.dict_ask_true["player_" + answer['SBD']] = player
-                print("player_" + answer['SBD'], his_ans, True)
-            else:
+                if "player_"+answer['SBD'] not in list(self.dict_ask_false.keys()):
+                    self.dict_ask_true["player_" + answer['SBD']] = player
+                    print("player_" + answer['SBD'], his_ans, True)
+                    try:
+                        self.dict_ask_false.pop("player_" + answer['SBD'])
+                    except:
+                        pass
+                else:
+                    print("player_" + answer['SBD'], his_ans, False, "*repeat")
+            elif not player.out and his_ans != correct_answer:
                 self.dict_ask_false["player_" + answer['SBD']] = player
+                try:
+                    self.dict_ask_true.pop("player_" + answer['SBD'])
+                except:
+                    pass
                 print("player_" + answer['SBD'], his_ans, False)
-        print(len(self.dict_ask_true), True , len(self.dict_ask_false), False)
+        print(len(self.dict_ask_true), True, len(self.dict_ask_false), False)
         ask_frame = AskOthersFrame(parent=None, title="Hỏi người chơi")
         ask_frame.Show()
 
@@ -369,15 +401,67 @@ class Panel(wx.Panel):
                 if his_ans == "A":
                     self.dict_A["player_" + answer['SBD']] = player
                     print("player_" + answer['SBD'], his_ans)
+                    # remove this player in another dict if he also had previous answers
+                    try:
+                        self.dict_B.pop("player_" + answer['SBD'])
+                    except:
+                        pass
+                    try:
+                        self.dict_C.pop("player_" + answer['SBD'])
+                    except:
+                        pass
+                    try:
+                        self.dict_D.pop("player_" + answer['SBD'])
+                    except:
+                        pass
                 elif his_ans == "B":
                     self.dict_B["player_" + answer['SBD']] = player
                     print("player_" + answer['SBD'], his_ans)
+                    # remove this player in another dict if he also had previous answers
+                    try:
+                        self.dict_A.pop("player_" + answer['SBD'])
+                    except:
+                        pass
+                    try:
+                        self.dict_C.pop("player_" + answer['SBD'])
+                    except:
+                        pass
+                    try:
+                        self.dict_D.pop("player_" + answer['SBD'])
+                    except:
+                        pass
                 elif his_ans == "C":
                     self.dict_C["player_" + answer['SBD']] = player
                     print("player_" + answer['SBD'], his_ans)
+                    # remove this player in another dict if he also had previous answers
+                    try:
+                        self.dict_B.pop("player_" + answer['SBD'])
+                    except:
+                        pass
+                    try:
+                        self.dict_A.pop("player_" + answer['SBD'])
+                    except:
+                        pass
+                    try:
+                        self.dict_D.pop("player_" + answer['SBD'])
+                    except:
+                        pass
                 elif his_ans == "D":
                     self.dict_D["player_" + answer['SBD']] = player
                     print("player_" + answer['SBD'], his_ans)
+                    # remove this player in another dict if he also had previous answers
+                    try:
+                        self.dict_B.pop("player_" + answer['SBD'])
+                    except:
+                        pass
+                    try:
+                        self.dict_C.pop("player_" + answer['SBD'])
+                    except:
+                        pass
+                    try:
+                        self.dict_A.pop("player_" + answer['SBD'])
+                    except:
+                        pass
         print(len(self.dict_A), "A\t", len(self.dict_B), "B\t", len(self.dict_C), "C\t", len(self.dict_D), "D\t")
 
         believe_frame = BelieveOthersFrame(parent=None, title="Tin người chơi")
@@ -385,8 +469,8 @@ class Panel(wx.Panel):
 
     def find_main_player(self, event):
         data = requests.get(url=url_data).json()
-        # correct_answer = requests.get(url=url_ans).json()[self.no_of_ques]["answer"]
-        correct_answer = "A"     # correct ans for filtering main player question
+        correct_answer = requests.get(url=url_ans).json()[self.no_of_ques]["answer"]
+        # correct_answer = "C"     # correct ans for filtering main player question
         print(self.no_of_ques + 1, " - CORRECT ANSWER: ", correct_answer)
         for answer in data[self.bound:]:
             player = self.dict_players["player_" + answer['SBD']]
@@ -404,6 +488,14 @@ class Panel(wx.Panel):
         self.no_of_ques += 1
         print("bound: ", self.bound)
         self.Refresh()
+
+    def show_money(self):
+        defeat = self.total - self.remain_players - 1
+        print("defeat: ", defeat)
+        for mark in self.list_money:
+            if mark[0]<= defeat <= mark[1]:
+                print(mark[0], mark[1], mark[2])
+                return mark[2]
 
 
 class App(wx.App):
