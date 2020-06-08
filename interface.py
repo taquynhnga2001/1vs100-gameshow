@@ -57,7 +57,7 @@ class SurveyOthersPanel(wx.Panel):
         dict_players = app.frame.panel.dict_survey_players
         no_of_ans = 0
         for player in dict_players.keys():
-            if not dict_players[player][0].out and dict_players[player][1] == his_ans:
+            if dict_players[player][1] == his_ans:
                 no_of_ans += 1
         self.survey_txt.SetLabel("   Có "+str(no_of_ans)+" người chơi khác ra\nđáp án "+his_ans)
         self.SetSizer(self.programpanel)
@@ -134,11 +134,10 @@ class BelieveOthersPanel(wx.Panel):
         a = len(app.frame.panel.dict_A)
         b = len(app.frame.panel.dict_B)
         c = len(app.frame.panel.dict_C)
-        d = len(app.frame.panel.dict_D)
-        print(a, b, c, d, "ahihi")
+        print(a, b, c, "ahihi")
 
-        x = ["A", "B", "C", "D"]
-        y = [a, b, c, d]
+        x = ["A", "B", "C"]
+        y = [a, b, c]
 
         fig = go.Figure(data=[go.Bar(x=x, y=y, text=y, textposition='outside', marker_color='coral')])
         fig.update_layout(yaxis=dict(dtick=1))
@@ -184,7 +183,6 @@ class Panel(wx.Panel):
         self.dict_A = {}
         self.dict_B = {}
         self.dict_C = {}
-        self.dict_D = {}
         self.no_of_ques = 0
         self.bound = 0
         # create players in table
@@ -315,23 +313,22 @@ class Panel(wx.Panel):
 
     def show_result(self, event):
         self.dict_remain_players = {}
+        answered = []
         data = requests.get(url=url_data).json()
         correct_answer = requests.get(url=url_ans).json()[self.no_of_ques]["answer"]
         print(self.no_of_ques+1, " - CORRECT ANSWER: ", correct_answer)
         for answer in data[self.bound:]:
             player = self.dict_players["player_" + answer['SBD']]
             his_ans = answer["Answer"]
-            if not player.out and his_ans == correct_answer:
-                self.dict_remain_players["player_" + answer['SBD']] = [player, his_ans]
-                print("player_" + answer['SBD'], his_ans, True)
-            else:
-                print("player_" + answer['SBD'], his_ans, False)
-                player.out = True
-                try:
-                    self.dict_remain_players.pop("player_" + answer['SBD'])
-                except:
-                    pass
-                self.change_color(player, sbd_color="dim grey", name_color="dim grey")
+            if not player.out and "player_" + answer['SBD'] not in answered:
+                answered.append("player_" + answer['SBD'])
+                if his_ans == correct_answer:
+                    self.dict_remain_players["player_" + answer['SBD']] = [player, his_ans]
+                    print("player_" + answer['SBD'], his_ans, True)
+                else:
+                    print("player_" + answer['SBD'], his_ans, False)
+                    player.out = True
+                    self.change_color(player, sbd_color="dim grey", name_color="dim grey")
         # remove players who did not answer the question and change status out=True
         for player in self.dict_players:
             if player not in self.dict_remain_players:
@@ -347,41 +344,36 @@ class Panel(wx.Panel):
 
     def survey_others(self, event):
         self.dict_survey_players = {}
+        answered = []
         data = requests.get(url=url_data).json()
         for answer in data[self.bound:]:
             player = self.dict_players["player_" + answer['SBD']]
             his_ans = answer["Answer"]
-            self.dict_survey_players["player_" + answer['SBD']] = [player, his_ans]
-            print("player_" + answer['SBD'], his_ans)
+            if not player.out and "player_" + answer['SBD'] not in answered:
+                answered.append("player_" + answer['SBD'])
+                self.dict_survey_players["player_" + answer['SBD']] = [player, his_ans]
+                print("player_" + answer['SBD'], his_ans)
         survey_frame = SurveyOthersFrame(parent=None, title="Khảo sát người chơi")
         survey_frame.Show()
 
     def ask_others(self, event):
         self.dict_ask_true = {}
         self.dict_ask_false = {}
+        answered = []
         data = requests.get(url=url_data).json()
         correct_answer = requests.get(url=url_ans).json()[self.no_of_ques]["answer"]
         print(self.no_of_ques + 1, " - CORRECT ANSWER: ", correct_answer)
         for answer in data[self.bound:]:
             player = self.dict_players["player_" + answer['SBD']]
             his_ans = answer["Answer"]
-            if not player.out and his_ans == correct_answer:
-                if "player_"+answer['SBD'] not in list(self.dict_ask_false.keys()):
+            if not player.out and "player_" + answer['SBD'] not in answered:
+                answered.append("player_" + answer['SBD'])
+                if his_ans == correct_answer:
                     self.dict_ask_true["player_" + answer['SBD']] = player
                     print("player_" + answer['SBD'], his_ans, True)
-                    try:
-                        self.dict_ask_false.pop("player_" + answer['SBD'])
-                    except:
-                        pass
                 else:
-                    print("player_" + answer['SBD'], his_ans, False, "*repeat")
-            elif not player.out and his_ans != correct_answer:
-                self.dict_ask_false["player_" + answer['SBD']] = player
-                try:
-                    self.dict_ask_true.pop("player_" + answer['SBD'])
-                except:
-                    pass
-                print("player_" + answer['SBD'], his_ans, False)
+                    self.dict_ask_false["player_" + answer['SBD']] = player
+                    print("player_" + answer['SBD'], his_ans, False)
         print(len(self.dict_ask_true), True, len(self.dict_ask_false), False)
         ask_frame = AskOthersFrame(parent=None, title="Hỏi người chơi")
         ask_frame.Show()
@@ -390,7 +382,6 @@ class Panel(wx.Panel):
         self.dict_A = {}
         self.dict_B = {}
         self.dict_C = {}
-        self.dict_D = {}
         answered = []       # list of players who answered
         data = requests.get(url=url_data).json()
         correct_answer = requests.get(url=url_ans).json()[self.no_of_ques]["answer"]
@@ -403,68 +394,13 @@ class Panel(wx.Panel):
                 if his_ans == "A":
                     self.dict_A["player_" + answer['SBD']] = player
                     print("player_" + answer['SBD'], his_ans)
-                    # remove this player in another dict if he also had previous answers
-                    try:
-                        self.dict_B.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-                    try:
-                        self.dict_C.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-                    try:
-                        self.dict_D.pop("player_" + answer['SBD'])
-                    except:
-                        pass
                 elif his_ans == "B":
                     self.dict_B["player_" + answer['SBD']] = player
                     print("player_" + answer['SBD'], his_ans)
-                    # remove this player in another dict if he also had previous answers
-                    try:
-                        self.dict_A.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-                    try:
-                        self.dict_C.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-                    try:
-                        self.dict_D.pop("player_" + answer['SBD'])
-                    except:
-                        pass
                 elif his_ans == "C":
                     self.dict_C["player_" + answer['SBD']] = player
                     print("player_" + answer['SBD'], his_ans)
-                    # remove this player in another dict if he also had previous answers
-                    try:
-                        self.dict_B.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-                    try:
-                        self.dict_A.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-                    try:
-                        self.dict_D.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-                elif his_ans == "D":
-                    self.dict_D["player_" + answer['SBD']] = player
-                    print("player_" + answer['SBD'], his_ans)
-                    # remove this player in another dict if he also had previous answers
-                    try:
-                        self.dict_B.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-                    try:
-                        self.dict_C.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-                    try:
-                        self.dict_A.pop("player_" + answer['SBD'])
-                    except:
-                        pass
-        print(len(self.dict_A), "A\t", len(self.dict_B), "B\t", len(self.dict_C), "C\t", len(self.dict_D), "D\t")
+        print(len(self.dict_A), "A\t", len(self.dict_B), "B\t", len(self.dict_C), "C\t")
 
         believe_frame = BelieveOthersFrame(parent=None, title="Tin người chơi")
         believe_frame.Show()
