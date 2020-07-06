@@ -3,7 +3,6 @@ import requests
 import math
 import random
 import plotly.graph_objects as go
-import time
 url_data = "https://sheetdb.io/api/v1/39deaca3lj8iw"
 url_ans = "https://sheetdb.io/api/v1/ofsmne5uzeyh7"
 url_players = "https://sheetdb.io/api/v1/3ookgqq1kq6q2"
@@ -23,7 +22,7 @@ class Player:
 # ------------ SURVEY OTHERS FRAME & PANEL -----------------------------------------
 class SurveyOthersFrame(wx.Frame):
     def __init__(self, parent, title):
-        super(SurveyOthersFrame, self).__init__(parent, title=title, size=(700, 500))
+        super(SurveyOthersFrame, self).__init__(parent, title=title, size=(1550, 850))
         self.SetIcon(wx.Icon("images/logo.jpg", wx.BITMAP_TYPE_ANY))
 
         self.panel = SurveyOthersPanel(self)
@@ -45,13 +44,17 @@ class SurveyOthersPanel(wx.Panel):
         survey_button.SetForegroundColour("black")
         survey_button.SetFont(wx.Font(27, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         survey_button.Bind(wx.EVT_BUTTON, self.survey)
-        self.survey_txt = wx.StaticText(self, label="Có bao nhiêu người chơi ra\nđáp án giống bạn?", style=wx.ALIGN_CENTRE)
+        self.survey_txt = wx.StaticText(self, label="Có bao nhiêu người chơi ra đáp án giống bạn?", style=wx.ALIGN_CENTRE)
         self.survey_txt.SetFont(wx.Font(30, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         self.survey_txt.SetForegroundColour("Red")
-        self.mainpanel.Add(ans_txt, 0, wx.TOP | wx.CENTER, 40)
-        self.mainpanel.Add(self.player_ans, 0, wx.TOP | wx.CENTER, 0)
-        self.mainpanel.Add(survey_button, 0, wx.TOP | wx.CENTER, 10)
-        self.mainpanel.Add(self.survey_txt, 0, wx.TOP, 50)
+        self.ans_txt = wx.StaticText(self, label="Có XX người chơi ra đáp án Y", style=wx.ALIGN_CENTRE)
+        self.ans_txt.SetFont(wx.Font(30, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        self.ans_txt.SetForegroundColour("GOLDENROD")
+        self.mainpanel.Add(ans_txt, 0, wx.TOP | wx.CENTER, 200)
+        self.mainpanel.Add(self.player_ans, 0, wx.TOP | wx.CENTER, 20)
+        self.mainpanel.Add(survey_button, 0, wx.TOP | wx.CENTER, 25)
+        self.mainpanel.Add(self.survey_txt, 0, wx.TOP | wx.CENTER, 70)
+        self.mainpanel.Add(self.ans_txt, 0, wx.TOP | wx.CENTER, 15)
         self.programpanel.Add(self.mainpanel, 0, wx.CENTER, 0)
         self.SetSizer(self.programpanel)
 
@@ -63,14 +66,15 @@ class SurveyOthersPanel(wx.Panel):
             if dict_players[player][1] == his_ans:
                 no_of_ans += 1
                 print(player[:-2], his_ans)
-        self.survey_txt.SetLabel("   Có "+str(no_of_ans)+" người chơi khác ra\nđáp án "+his_ans)
+        self.ans_txt.SetLabel("Có "+str(no_of_ans)+" người chơi ra đáp án "+his_ans)
+        self.ans_txt.SetForegroundColour("red")
         self.SetSizer(self.programpanel)
 
 
 # ------------ ASK OTHERS FRAME & PANEL -----------------------------------------
 class AskOthersFrame(wx.Frame):
     def __init__(self, parent, title):
-        super(AskOthersFrame, self).__init__(parent, title=title, size=(700, 500))
+        super(AskOthersFrame, self).__init__(parent, title=title, size=(1550, 850))
         self.SetIcon(wx.Icon("images/logo.jpg", wx.BITMAP_TYPE_ANY))
 
         self.panel = AskOthersPanel(self)
@@ -84,10 +88,10 @@ class AskOthersPanel(wx.Panel):
         self.programpanel = wx.BoxSizer(wx.VERTICAL)
         self.mainpanel = wx.BoxSizer(wx.VERTICAL)
         twoplayers = wx.BoxSizer(wx.HORIZONTAL)
-        choose_button = wx.Button(self, label="Chọn 1 người đúng và 1 người sai", size=(650, 70))
+        choose_button = wx.Button(self, label="Chọn 1 người đúng và 1 người sai", size=(750, 70))
         choose_button.SetBackgroundColour("blue violet")
         choose_button.SetForegroundColour("black")
-        choose_button.SetFont(wx.Font(27, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        choose_button.SetFont(wx.Font(30, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         choose_button.Bind(wx.EVT_BUTTON, self.choose)
         self.num1 = wx.TextCtrl(self, size=(150, 100), style=wx.TE_CENTRE)
         self.num1.SetFont(wx.Font(65, wx.DEFAULT, wx.NORMAL, wx.BOLD))
@@ -95,10 +99,10 @@ class AskOthersPanel(wx.Panel):
         self.num2.SetFont(wx.Font(65, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         twoplayers.Add(self.num1, 0, wx.CENTER, 0)
         twoplayers.Add(self.num2, 0, wx.LEFT, 20)
-        self.reject_help = wx.StaticText(self, label="Các người chơi còn lại đều trả lời đúng hoặc sai!")
-        self.reject_help.SetFont(wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        self.reject_help = wx.StaticText(self, label="Các đáp án hợp lệ đều đúng hoặc đều sai!")
+        self.reject_help.SetFont(wx.Font(30, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         self.reject_help.SetForegroundColour("GOLDENROD")
-        self.mainpanel.Add(choose_button, 0, wx.TOP | wx.CENTER, 50)
+        self.mainpanel.Add(choose_button, 0, wx.TOP | wx.CENTER, 200)
         self.mainpanel.Add(twoplayers, 0, wx.TOP | wx.CENTER, 50)
         self.mainpanel.Add(self.reject_help, 0, wx.TOP | wx.CENTER, 50)
 
@@ -124,7 +128,7 @@ class AskOthersPanel(wx.Panel):
 # ------------ BELIEVE OTHERS FRAME & PANEL -----------------------------------------
 class BelieveOthersFrame(wx.Frame):
     def __init__(self, parent, title):
-        super(BelieveOthersFrame, self).__init__(parent, title=title, size=(740, 560))
+        super(BelieveOthersFrame, self).__init__(parent, title=title, size=(1550, 850))   # (1550, 850)
         self.SetIcon(wx.Icon("images/logo.jpg", wx.BITMAP_TYPE_ANY))
 
         self.panel = BelieveOthersPanel(self)
@@ -138,15 +142,14 @@ class BelieveOthersPanel(wx.Panel):
         a = len(app.frame.panel.dict_A)
         b = len(app.frame.panel.dict_B)
         c = len(app.frame.panel.dict_C)
-        print(a, b, c, "ahihi")
 
         x = ["A", "B", "C"]
         y = [a, b, c]
 
         fig = go.Figure(data=[go.Bar(x=x, y=y, text=y, textposition='outside', marker_color='coral')])
-        fig.update_layout(yaxis=dict(dtick=1))
+        fig.update_layout(yaxis=dict(dtick=1), font=dict(size=25), margin=dict(pad=40), width=1000, height=700)
         fig.write_image("images/believechart.png")
-        chart = wx.StaticBitmap(self, pos=(10, 10))
+        chart = wx.StaticBitmap(self, pos=(300, 50))
         chart.SetBitmap(wx.Bitmap('images/believechart.png'))
 
 
@@ -188,7 +191,7 @@ class Panel(wx.Panel):
         self.dict_B = {}
         self.dict_C = {}
         self.no_of_ques = 0
-        self.bound = 0
+        self.bound = 0         # self.bound in bound.csv file = stt - 1 (stt: index cell in gg drive sheet)
         self.main_player = None
         # create players in table
         list_players = requests.get(url=url_players).json()
@@ -254,7 +257,7 @@ class Panel(wx.Panel):
         # Display his money
         self.money = 0
         self.money_text = wx.StaticText(self, label="S$"+str(self.money)+" ", size=(300, 150), style=wx.ALIGN_RIGHT)
-        self.money_text.SetFont(wx.Font(100, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        self.money_text.SetFont(wx.Font(90, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         self.money_text.SetForegroundColour('yellow')
         self.money_text.SetBackgroundColour('black')
         # create list to show money
@@ -345,7 +348,6 @@ class Panel(wx.Panel):
         self.remain_players = len(self.dict_remain_players.keys())
         self.heading_txt.SetLabel("1 vs. " + str(self.remain_players))
         self.money_text.SetLabel("S$"+str(self.show_money()))
-        print("no of ques: ", self.no_of_ques, self.no_of_ques//2)
         if self.no_of_ques%2:
             self.resultButton.SetBackgroundColour('navy')
         else:
@@ -375,7 +377,7 @@ class Panel(wx.Panel):
         answered = []
         data = requests.get(url=url_data).json()
         correct_answer = requests.get(url=url_ans).json()[self.no_of_ques]["answer"]
-        print(self.no_of_ques + 1, " - CORRECT ANSWER: ", correct_answer)
+        print(self.no_of_ques, " - CORRECT ANSWER: ", correct_answer)
         for answer in data[self.bound:]:
             try:
                 player = self.dict_players["player_" + answer['SBD'].lower()]
@@ -401,7 +403,7 @@ class Panel(wx.Panel):
         answered = []       # list of players who answered
         data = requests.get(url=url_data).json()
         correct_answer = requests.get(url=url_ans).json()[self.no_of_ques]["answer"]
-        print(self.no_of_ques + 1, " - CORRECT ANSWER: ", correct_answer)
+        print(self.no_of_ques, " - CORRECT ANSWER: ", correct_answer)
         for answer in data[self.bound:]:
             try:
                 player = self.dict_players["player_" + answer['SBD'].lower()]
@@ -412,13 +414,13 @@ class Panel(wx.Panel):
                 answered.append("player_" + answer['SBD'].lower())
                 if his_ans == "A":
                     self.dict_A["player_" + answer['SBD'].lower()] = player
-                    print("player_" + answer['SBD'][:2], his_ans)
+                    print("player_" + answer['SBD'][:2], his_ans, answer['Timestamp'])
                 elif his_ans == "B":
                     self.dict_B["player_" + answer['SBD'].lower()] = player
-                    print("player_" + answer['SBD'][:2], his_ans)
+                    print("player_" + answer['SBD'][:2], his_ans, answer['Timestamp'])
                 elif his_ans == "C":
                     self.dict_C["player_" + answer['SBD'].lower()] = player
-                    print("player_" + answer['SBD'][:2], his_ans)
+                    print("player_" + answer['SBD'][:2], his_ans, answer['Timestamp'])
         print(len(self.dict_A), "A\t", len(self.dict_B), "B\t", len(self.dict_C), "C\t")
 
         believe_frame = BelieveOthersFrame(parent=None, title="Tin người chơi")
@@ -431,6 +433,8 @@ class Panel(wx.Panel):
         # 3 cases:
         with open('find_main_player.csv', 'r') as fmp:
             fmp = fmp.readlines()
+        with open('bound.csv', 'r') as bound:
+            bound = bound.readlines()
         # case 1: find main player for the new game
         if not self.main_player and len(fmp) == 0:
                 for answer in data[self.bound:]:
@@ -442,7 +446,7 @@ class Panel(wx.Panel):
                     if not player.out and his_ans == correct_answer:
                         self.main_player = player
                         self.main_player_button.SetLabel(self.main_player.name)
-                        self.main_player_button.SetBitmap(wx.Bitmap("images/main_player.png"))
+                        self.main_player_button.SetFont(wx.Font(30, wx.DEFAULT, wx.NORMAL, wx.BOLD))
                         self.main_player.out = True
                         self.dict_players.pop("player_"+self.main_player.code)
                         print("player_" + answer['SBD'].lower()[:2], his_ans, True)
@@ -458,24 +462,27 @@ class Panel(wx.Panel):
                 self.change_color(player=self.main_player, sbd_color="dim grey", name_color="dim grey")
                 self.main_player = random.choice(list(self.dict_remain_players.values()))[0]
                 self.main_player_button.SetLabel(self.main_player.name)
-                self.main_player_button.SetBitmap(wx.Bitmap("images/main_player.png"))
+                self.main_player_button.SetFont(wx.Font(30, wx.DEFAULT, wx.NORMAL, wx.BOLD))
                 self.change_color(player=self.main_player, sbd_color="blue violet", name_color="MEDIUM VIOLET RED")
                 with open('find_main_player.csv', 'w') as fmp_w:
                     fmp_w.write(self.main_player.code)
+                with open('bound.csv', 'w') as bound_w:
+                    bound_w.write(str(self.bound))
                 self.Refresh()
         # case 3: display main player chosen from the previous session
         elif not self.main_player and len(fmp) != 0:
             code = fmp[-1]
+            self.bound = int(bound[-1])
             self.main_player = self.dict_players["player_" + code]
             self.main_player_button.SetLabel(self.main_player.name)
-            self.main_player_button.SetBitmap(wx.Bitmap("images/main_player.png"))
+            self.main_player_button.SetFont(wx.Font(30, wx.DEFAULT, wx.NORMAL, wx.BOLD))
             self.main_player.out = True
             self.dict_players.pop("player_" + self.main_player.code)
             print("Main player: player_" + code[:2])
-            print()
             self.change_color(player=self.main_player, sbd_color="blue violet", name_color="MEDIUM VIOLET RED")
             self.no_of_ques += 1
             print("bound: ", self.bound)
+            print()
             self.Refresh()
 
     def show_money(self):
